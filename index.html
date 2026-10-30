@@ -19,16 +19,26 @@
 <body class="bg-gray-900 text-white min-h-screen p-6 font-sans">
   <div class="max-w-6xl mx-auto space-y-6">
     
-    <!-- Header -->
-    <header class="flex justify-between items-center border-b border-gray-700 pb-4">
+    <!-- HEADER & STATUS KONEKSI UTAMA -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
       <div>
         <h1 class="text-3xl font-bold text-blue-400">Smart Parking AI Dashboard</h1>
         <p class="text-xs text-gray-400 mt-1">Sistem Monitoring & Kontrol Gerbang Real-Time</p>
       </div>
-      <span id="system-status" class="bg-green-600 px-3 py-1 rounded-full text-xs font-semibold">Sistem On</span>
+
+      <!-- Indikator & Tombol Koneksi Firebase -->
+      <div class="flex items-center gap-3 bg-gray-800 p-3 rounded-lg border border-gray-700">
+        <div class="flex items-center gap-2">
+          <span id="firebase-dot" class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+          <span id="firebase-status-text" class="text-xs font-bold text-red-400">Firebase: Disconnected</span>
+        </div>
+        <button id="btn-toggle-firebase" onclick="toggleFirebaseConnection()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition">
+          Connect Firebase
+        </button>
+      </div>
     </header>
 
-    <!-- Ringkasan Status -->
+    <!-- RINGKASAN STATUS SLOT -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 text-center">
         <p class="text-gray-400 text-sm">Total Slot Parkir</p>
@@ -44,26 +54,39 @@
       </div>
     </div>
 
-    <!-- Area Kamera AI & Control Slot -->
+    <!-- AREA KAMERA AI & CONTROL SLOT -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
-      <!-- Box AI Kamera -->
+      <!-- BOX AI KAMERA -->
       <div class="bg-gray-800 p-5 rounded-lg border border-gray-700">
-        <h2 class="text-xl font-bold mb-4 text-blue-300">Deteksi Kamera AI (Teachable Machine)</h2>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-blue-300">Kamera AI (Teachable Machine)</h2>
+          
+          <!-- Indikator Koneksi Kamera -->
+          <div class="flex items-center gap-2">
+            <span id="camera-dot" class="w-3 h-3 rounded-full bg-red-500"></span>
+            <span id="camera-status-text" class="text-xs font-bold text-red-400">Offline</span>
+          </div>
+        </div>
+
         <div class="flex flex-col items-center">
           <div id="webcam-container" class="rounded-lg overflow-hidden bg-black w-64 h-64 flex items-center justify-center mb-4 border border-gray-600">
-            <span class="text-xs text-gray-500">Kamera Belum Aktif</span>
+            <span id="webcam-placeholder" class="text-xs text-gray-500">Kamera Belum Aktif</span>
           </div>
-          <button onclick="initCamera()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md font-medium text-sm transition">
-            Aktifkan Kamera AI
+          
+          <!-- Tombol Connect/Disconnect Kamera -->
+          <button id="btn-toggle-camera" onclick="toggleCameraConnection()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-medium text-sm transition">
+            Start / Connect Camera
           </button>
+          
           <div id="label-container" class="mt-4 w-full text-center space-y-1 text-sm font-mono"></div>
         </div>
       </div>
 
-      <!-- Box Monitoring Slot Parkir -->
+      <!-- BOX MONITORING & KONTROL GERBANG -->
       <div class="bg-gray-800 p-5 rounded-lg border border-gray-700">
         <h2 class="text-xl font-bold mb-4 text-blue-300">Status Slot Parkir</h2>
+        
         <div class="grid grid-cols-2 gap-4">
           <div id="slotA-box" class="p-6 rounded-lg border text-center transition-all bg-gray-700 border-gray-600">
             <h3 class="text-lg font-bold">Slot A</h3>
@@ -75,13 +98,13 @@
           </div>
         </div>
 
-        <!-- Manual Control Gate -->
-        <h3 class="text-md font-bold mt-6 mb-3 text-gray-300">Kontrol Gerbang Manual (Firebase)</h3>
+        <!-- Tombol Buka/Tutup Gerbang Manual -->
+        <h3 class="text-md font-bold mt-6 mb-3 text-gray-300">Kontrol Gerbang Manual</h3>
         <div class="flex gap-4">
-          <button onclick="toggleGate('gateIn')" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded font-medium text-sm transition">
+          <button onclick="toggleGate('gateIn')" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2.5 rounded font-semibold text-sm transition">
             Buka/Tutup Gate IN
           </button>
-          <button onclick="toggleGate('gateOut')" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-medium text-sm transition">
+          <button onclick="toggleGate('gateOut')" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2.5 rounded font-semibold text-sm transition">
             Buka/Tutup Gate OUT
           </button>
         </div>
@@ -89,11 +112,11 @@
 
     </div>
 
-    <!-- Catatan Log Aktivitas -->
+    <!-- CATATAN LOG AKTIVITAS -->
     <div class="bg-gray-800 p-5 rounded-lg border border-gray-700">
       <h2 class="text-lg font-bold mb-3 text-blue-300">Log Aktivitas Sistem</h2>
       <ul id="log-list" class="space-y-2 max-h-40 overflow-y-auto text-xs font-mono text-gray-300">
-        <li class="border-b border-gray-700 pb-1 text-gray-500">Sistem siap menerima aktivitas...</li>
+        <li class="border-b border-gray-700 pb-1 text-gray-500">Sistem dimulai...</li>
       </ul>
     </div>
 
@@ -101,21 +124,64 @@
 
   <script>
     // -------------------------------------------------------------
-    // KONFIGURASI FIREBASE & TEACHABLE MACHINE
+    // KONFIGURASI DAN STATE SISTEM
     // -------------------------------------------------------------
     const firebaseConfig = {
       databaseURL: "https://SMART-PARKING-DEFAULT-RTDB.firebaseio.com" // GANTI DENGAN URL FIREBASE KAMU
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+
+    let isFirebaseConnected = false;
+    let isCameraConnected = false;
+    let dbRef = null;
 
     const URL_MODEL = "https://teachablemachine.withgoogle.com/models/Mq4Ey6k-y/";
-    let model, webcam, labelContainer, maxPredictions;
+    let model, webcam, labelContainer, maxPredictions, animationFrameId;
 
     // -------------------------------------------------------------
-    // LISTEN DATA REALTIME DARI FIREBASE
+    // FUNGSI KONEKSI FIREBASE (CONNECT / DISCONNECT TOGGLE)
     // -------------------------------------------------------------
-    db.ref('parking').on('value', (snapshot) => {
+    function toggleFirebaseConnection() {
+      if (!isFirebaseConnected) {
+        connectFirebase();
+      } else {
+        disconnectFirebase();
+      }
+    }
+
+    function connectFirebase() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        
+        dbRef = firebase.database().ref('parking');
+        dbRef.on('value', handleFirebaseData);
+
+        isFirebaseConnected = true;
+        updateFirebaseUI(true);
+        addLog("Firebase", "Berhasil terhubung ke database!");
+      } catch (error) {
+        addLog("Firebase Error", error.message);
+      }
+    }
+
+    function disconnectFirebase() {
+      if (dbRef) {
+        dbRef.off(); // Matikan listener realtime
+      }
+      isFirebaseConnected = false;
+      updateFirebaseUI(false);
+      
+      // Reset UI tampilan
+      document.getElementById('available-slots').innerText = "-";
+      document.getElementById('gate-status').innerText = "IN: - | OUT: -";
+      updateSlotUI('slotA-box', 'slotA-text', false, true);
+      updateSlotUI('slotB-box', 'slotB-text', false, true);
+      
+      addLog("Firebase", "Koneksi ke database diputuskan.");
+    }
+
+    function handleFirebaseData(snapshot) {
       const data = snapshot.val();
       if (!data) return;
 
@@ -127,11 +193,38 @@
 
       document.getElementById('gate-status').innerText = 
         `IN: ${data.gateIn.status.toUpperCase()} | OUT: ${data.gateOut.status.toUpperCase()}`;
-    });
+    }
 
-    function updateSlotUI(boxId, textId, isOccupied) {
+    function updateFirebaseUI(connected) {
+      const dot = document.getElementById('firebase-dot');
+      const text = document.getElementById('firebase-status-text');
+      const btn = document.getElementById('btn-toggle-firebase');
+
+      if (connected) {
+        dot.className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
+        text.className = "text-xs font-bold text-green-400";
+        text.innerText = "Firebase: Connected";
+        btn.innerText = "Disconnect";
+        btn.className = "bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition";
+      } else {
+        dot.className = "w-3 h-3 rounded-full bg-red-500";
+        text.className = "text-xs font-bold text-red-400";
+        text.innerText = "Firebase: Disconnected";
+        btn.innerText = "Connect Firebase";
+        btn.className = "bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition";
+      }
+    }
+
+    function updateSlotUI(boxId, textId, isOccupied, isOffline = false) {
       const box = document.getElementById(boxId);
       const text = document.getElementById(textId);
+
+      if (isOffline) {
+        box.className = "p-6 rounded-lg border text-center transition-all bg-gray-700 border-gray-600";
+        text.innerText = "Offline";
+        return;
+      }
+
       if (isOccupied) {
         box.className = "p-6 rounded-lg border text-center transition-all bg-red-900 border-red-500";
         text.innerText = "TERISI";
@@ -142,63 +235,78 @@
     }
 
     // -------------------------------------------------------------
-    // FUNGSI KONTROL GERBANG (MANUAL VIA WEB)
+    // FUNGSI KONEKSI KAMERA AI (CONNECT / DISCONNECT TOGGLE)
     // -------------------------------------------------------------
-    function toggleGate(gateName) {
-      db.ref(`parking/${gateName}`).once('value', snapshot => {
-        const current = snapshot.val().status;
-        const nextStatus = current === "tertutup" ? "terbuka" : "tertutup";
-        
-        db.ref(`parking/${gateName}`).update({
-          status: nextStatus,
-          updated: Date.now()
-        });
-        
-        addLog("Website", `Mengubah status ${gateName} menjadi ${nextStatus}`);
-      });
-    }
-
-    function addLog(source, eventText) {
-      const logList = document.getElementById('log-list');
-      const item = document.createElement('li');
-      item.className = "border-b border-gray-700 pb-1";
-      item.innerText = `[${new Date().toLocaleTimeString()}] (${source}) ${eventText}`;
-      logList.prepend(item);
-    }
-
-    // -------------------------------------------------------------
-    // INTEGRASI TEACHABLE MACHINE
-    // -------------------------------------------------------------
-    async function initCamera() {
-      const webcamBox = document.getElementById("webcam-container");
-      webcamBox.innerHTML = ""; // Bersihkan teks placeholder
-
-      const modelURL = URL_MODEL + "model.json";
-      const metadataURL = URL_MODEL + "metadata.json";
-
-      model = await tmImage.load(modelURL, metadataURL);
-      maxPredictions = model.getTotalClasses();
-
-      webcam = new tmImage.Webcam(250, 250, true);
-      await webcam.setup();
-      await webcam.play();
-      window.requestAnimationFrame(loop);
-
-      webcamBox.appendChild(webcam.canvas);
-      labelContainer = document.getElementById("label-container");
-      labelContainer.innerHTML = "";
-      
-      for (let i = 0; i < maxPredictions; i++) {
-        labelContainer.appendChild(document.createElement("div"));
+    function toggleCameraConnection() {
+      if (!isCameraConnected) {
+        startCamera();
+      } else {
+        stopCamera();
       }
+    }
+
+    async function startCamera() {
+      const btn = document.getElementById("btn-toggle-camera");
+      btn.innerText = "Loading Model...";
+      btn.disabled = true;
+
+      try {
+        const modelURL = URL_MODEL + "model.json";
+        const metadataURL = URL_MODEL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        webcam = new tmImage.Webcam(250, 250, true);
+        await webcam.setup();
+        await webcam.play();
+
+        const webcamContainer = document.getElementById("webcam-container");
+        webcamContainer.innerHTML = ""; 
+        webcamContainer.appendChild(webcam.canvas);
+
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+        for (let i = 0; i < maxPredictions; i++) {
+          labelContainer.appendChild(document.createElement("div"));
+        }
+
+        isCameraConnected = true;
+        updateCameraUI(true);
+        addLog("Kamera", "Kamera AI aktif dan mendeteksi.");
+        
+        loop();
+      } catch (err) {
+        addLog("Kamera Error", "Gagal membuka kamera / model");
+        updateCameraUI(false);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function stopCamera() {
+      if (webcam) {
+        webcam.stop();
+      }
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      isCameraConnected = false;
       
-      addLog("Kamera", "Model AI Teachable Machine berhasil diaktifkan");
+      const webcamContainer = document.getElementById("webcam-container");
+      webcamContainer.innerHTML = `<span class="text-xs text-gray-500">Kamera Belum Aktif</span>`;
+      document.getElementById("label-container").innerHTML = "";
+
+      updateCameraUI(false);
+      addLog("Kamera", "Kamera AI dimatikan.");
     }
 
     async function loop() {
+      if (!isCameraConnected) return;
       webcam.update();
       await predict();
-      window.requestAnimationFrame(loop);
+      animationFrameId = window.requestAnimationFrame(loop);
     }
 
     async function predict() {
@@ -208,6 +316,65 @@
         labelContainer.childNodes[i].innerHTML = classPrediction;
       }
     }
+
+    function updateCameraUI(connected) {
+      const dot = document.getElementById('camera-dot');
+      const text = document.getElementById('camera-status-text');
+      const btn = document.getElementById('btn-toggle-camera');
+
+      if (connected) {
+        dot.className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
+        text.className = "text-xs font-bold text-green-400";
+        text.innerText = "Online";
+        btn.innerText = "Stop / Disconnect Camera";
+        btn.className = "bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md font-medium text-sm transition";
+      } else {
+        dot.className = "w-3 h-3 rounded-full bg-red-500";
+        text.className = "text-xs font-bold text-red-400";
+        text.innerText = "Offline";
+        btn.innerText = "Start / Connect Camera";
+        btn.className = "bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-medium text-sm transition";
+      }
+    }
+
+    // -------------------------------------------------------------
+    // FUNGSI KONTROL GERBANG MANUAL
+    // -------------------------------------------------------------
+    function toggleGate(gateName) {
+      if (!isFirebaseConnected) {
+        alert("Harap sambungkan Firebase terlebih dahulu!");
+        return;
+      }
+
+      firebase.database().ref(`parking/${gateName}`).once('value', snapshot => {
+        const currentData = snapshot.val();
+        const currentStatus = currentData ? currentData.status : "tertutup";
+        const nextStatus = currentStatus === "tertutup" ? "terbuka" : "tertutup";
+        
+        firebase.database().ref(`parking/${gateName}`).update({
+          status: nextStatus,
+          updated: Date.now()
+        });
+        
+        addLog("Website", `Status ${gateName} diubah menjadi ${nextStatus}`);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // LOG SYSTEM
+    // -------------------------------------------------------------
+    function addLog(source, eventText) {
+      const logList = document.getElementById('log-list');
+      const item = document.createElement('li');
+      item.className = "border-b border-gray-700 pb-1";
+      item.innerText = `[${new Date().toLocaleTimeString()}] (${source}) ${eventText}`;
+      logList.prepend(item);
+    }
+
+    // Otomatis hubungkan ke Firebase saat halaman pertama di-load
+    window.onload = () => {
+      connectFirebase();
+    };
   </script>
 </body>
 </html>
