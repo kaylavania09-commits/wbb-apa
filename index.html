@@ -8,6 +8,10 @@
   <!-- UI Framework (Tailwind CSS) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Font & Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
   <!-- Teachable Machine & TensorFlow.js Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
@@ -15,366 +19,70 @@
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top left, #0f172a, #020617);
+    }
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .glow-blue {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    }
+    .glow-green {
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+    }
+    .glow-red {
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6 font-sans">
-  <div class="max-w-6xl mx-auto space-y-6">
+<body class="text-slate-100 min-h-screen p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
     
-    <!-- HEADER & STATUS KONEKSI UTAMA -->
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-blue-400">Smart Parking AI Dashboard</h1>
-        <p class="text-xs text-gray-400 mt-1">Sistem Monitoring & Kontrol Gerbang Real-Time</p>
+    <!-- HEADER UTAMA -->
+    <header class="glass-card rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-l-blue-500">
+      <div class="flex items-center gap-4">
+        <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
+          <i class="fa-solid fa-square-parking text-3xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold font-orbitron tracking-wider bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+            SMART PARKING AI
+          </h1>
+          <p class="text-xs text-slate-400 flex items-center gap-2 mt-1">
+            <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+            Real-Time IoT & Machine Learning System
+          </p>
+        </div>
       </div>
 
-      <!-- Indikator & Tombol Koneksi Firebase -->
-      <div class="flex items-center gap-3 bg-gray-800 p-3 rounded-lg border border-gray-700">
-        <div class="flex items-center gap-2">
-          <span id="firebase-dot" class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-          <span id="firebase-status-text" class="text-xs font-bold text-red-400">Firebase: Disconnected</span>
+      <!-- STATUS & TOMBOL FIREBASE -->
+      <div class="flex items-center gap-3 bg-slate-900/80 p-2.5 px-4 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span id="firebase-dot" class="w-3 h-3 rounded-full bg-red-500"></span>
+          <div class="text-left">
+            <p class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Database</p>
+            <p id="firebase-status-text" class="text-xs font-bold text-red-400 font-orbitron">OFFLINE</p>
+          </div>
         </div>
-        <button id="btn-toggle-firebase" onclick="toggleFirebaseConnection()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition">
-          Connect Firebase
+        <button id="btn-toggle-firebase" onclick="toggleFirebaseConnection()" class="ml-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs px-4 py-2 rounded-lg font-semibold transition shadow-lg hover:shadow-blue-500/25">
+          <i class="fa-solid fa-plug mr-1"></i> Connect
         </button>
       </div>
     </header>
 
-    <!-- RINGKASAN STATUS SLOT -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 text-center">
-        <p class="text-gray-400 text-sm">Total Slot Parkir</p>
-        <p id="total-slots" class="text-4xl font-bold text-white mt-1">2</p>
-      </div>
-      <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 text-center">
-        <p class="text-gray-400 text-sm">Slot Tersedia</p>
-        <p id="available-slots" class="text-4xl font-bold text-green-400 mt-1">-</p>
-      </div>
-      <div class="bg-gray-800 p-5 rounded-lg border border-gray-700 text-center">
-        <p class="text-gray-400 text-sm">Status Gerbang (IN / OUT)</p>
-        <p id="gate-status" class="text-lg font-semibold text-yellow-400 mt-2">IN: - | OUT: -</p>
-      </div>
-    </div>
-
-    <!-- AREA KAMERA AI & CONTROL SLOT -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- METRICS STATISTIK -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
       
-      <!-- BOX AI KAMERA -->
-      <div class="bg-gray-800 p-5 rounded-lg border border-gray-700">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-blue-300">Kamera AI (Teachable Machine)</h2>
-          
-          <!-- Indikator Koneksi Kamera -->
-          <div class="flex items-center gap-2">
-            <span id="camera-dot" class="w-3 h-3 rounded-full bg-red-500"></span>
-            <span id="camera-status-text" class="text-xs font-bold text-red-400">Offline</span>
-          </div>
-        </div>
-
-        <div class="flex flex-col items-center">
-          <div id="webcam-container" class="rounded-lg overflow-hidden bg-black w-64 h-64 flex items-center justify-center mb-4 border border-gray-600">
-            <span id="webcam-placeholder" class="text-xs text-gray-500">Kamera Belum Aktif</span>
-          </div>
-          
-          <!-- Tombol Connect/Disconnect Kamera -->
-          <button id="btn-toggle-camera" onclick="toggleCameraConnection()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-medium text-sm transition">
-            Start / Connect Camera
-          </button>
-          
-          <div id="label-container" class="mt-4 w-full text-center space-y-1 text-sm font-mono"></div>
-        </div>
-      </div>
-
-      <!-- BOX MONITORING & KONTROL GERBANG -->
-      <div class="bg-gray-800 p-5 rounded-lg border border-gray-700">
-        <h2 class="text-xl font-bold mb-4 text-blue-300">Status Slot Parkir</h2>
-        
-        <div class="grid grid-cols-2 gap-4">
-          <div id="slotA-box" class="p-6 rounded-lg border text-center transition-all bg-gray-700 border-gray-600">
-            <h3 class="text-lg font-bold">Slot A</h3>
-            <p id="slotA-text" class="text-sm mt-2 font-semibold">Memuat...</p>
-          </div>
-          <div id="slotB-box" class="p-6 rounded-lg border text-center transition-all bg-gray-700 border-gray-600">
-            <h3 class="text-lg font-bold">Slot B</h3>
-            <p id="slotB-text" class="text-sm mt-2 font-semibold">Memuat...</p>
-          </div>
-        </div>
-
-        <!-- Tombol Buka/Tutup Gerbang Manual -->
-        <h3 class="text-md font-bold mt-6 mb-3 text-gray-300">Kontrol Gerbang Manual</h3>
-        <div class="flex gap-4">
-          <button onclick="toggleGate('gateIn')" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white py-2.5 rounded font-semibold text-sm transition">
-            Buka/Tutup Gate IN
-          </button>
-          <button onclick="toggleGate('gateOut')" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2.5 rounded font-semibold text-sm transition">
-            Buka/Tutup Gate OUT
-          </button>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- CATATAN LOG AKTIVITAS -->
-    <div class="bg-gray-800 p-5 rounded-lg border border-gray-700">
-      <h2 class="text-lg font-bold mb-3 text-blue-300">Log Aktivitas Sistem</h2>
-      <ul id="log-list" class="space-y-2 max-h-40 overflow-y-auto text-xs font-mono text-gray-300">
-        <li class="border-b border-gray-700 pb-1 text-gray-500">Sistem dimulai...</li>
-      </ul>
-    </div>
-
-  </div>
-
-  <script>
-    // -------------------------------------------------------------
-    // KONFIGURASI DAN STATE SISTEM
-    // -------------------------------------------------------------
-    const firebaseConfig = {
-      databaseURL: "https://SMART-PARKING-DEFAULT-RTDB.firebaseio.com" // GANTI DENGAN URL FIREBASE KAMU
-    };
-
-    let isFirebaseConnected = false;
-    let isCameraConnected = false;
-    let dbRef = null;
-
-    const URL_MODEL = "https://teachablemachine.withgoogle.com/models/Mq4Ey6k-y/";
-    let model, webcam, labelContainer, maxPredictions, animationFrameId;
-
-    // -------------------------------------------------------------
-    // FUNGSI KONEKSI FIREBASE (CONNECT / DISCONNECT TOGGLE)
-    // -------------------------------------------------------------
-    function toggleFirebaseConnection() {
-      if (!isFirebaseConnected) {
-        connectFirebase();
-      } else {
-        disconnectFirebase();
-      }
-    }
-
-    function connectFirebase() {
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(firebaseConfig);
-        }
-        
-        dbRef = firebase.database().ref('parking');
-        dbRef.on('value', handleFirebaseData);
-
-        isFirebaseConnected = true;
-        updateFirebaseUI(true);
-        addLog("Firebase", "Berhasil terhubung ke database!");
-      } catch (error) {
-        addLog("Firebase Error", error.message);
-      }
-    }
-
-    function disconnectFirebase() {
-      if (dbRef) {
-        dbRef.off(); // Matikan listener realtime
-      }
-      isFirebaseConnected = false;
-      updateFirebaseUI(false);
-      
-      // Reset UI tampilan
-      document.getElementById('available-slots').innerText = "-";
-      document.getElementById('gate-status').innerText = "IN: - | OUT: -";
-      updateSlotUI('slotA-box', 'slotA-text', false, true);
-      updateSlotUI('slotB-box', 'slotB-text', false, true);
-      
-      addLog("Firebase", "Koneksi ke database diputuskan.");
-    }
-
-    function handleFirebaseData(snapshot) {
-      const data = snapshot.val();
-      if (!data) return;
-
-      document.getElementById('available-slots').innerText = data.available;
-      document.getElementById('total-slots').innerText = data.total;
-      
-      updateSlotUI('slotA-box', 'slotA-text', data.slotA.occupied);
-      updateSlotUI('slotB-box', 'slotB-text', data.slotB.occupied);
-
-      document.getElementById('gate-status').innerText = 
-        `IN: ${data.gateIn.status.toUpperCase()} | OUT: ${data.gateOut.status.toUpperCase()}`;
-    }
-
-    function updateFirebaseUI(connected) {
-      const dot = document.getElementById('firebase-dot');
-      const text = document.getElementById('firebase-status-text');
-      const btn = document.getElementById('btn-toggle-firebase');
-
-      if (connected) {
-        dot.className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
-        text.className = "text-xs font-bold text-green-400";
-        text.innerText = "Firebase: Connected";
-        btn.innerText = "Disconnect";
-        btn.className = "bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition";
-      } else {
-        dot.className = "w-3 h-3 rounded-full bg-red-500";
-        text.className = "text-xs font-bold text-red-400";
-        text.innerText = "Firebase: Disconnected";
-        btn.innerText = "Connect Firebase";
-        btn.className = "bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded font-semibold transition";
-      }
-    }
-
-    function updateSlotUI(boxId, textId, isOccupied, isOffline = false) {
-      const box = document.getElementById(boxId);
-      const text = document.getElementById(textId);
-
-      if (isOffline) {
-        box.className = "p-6 rounded-lg border text-center transition-all bg-gray-700 border-gray-600";
-        text.innerText = "Offline";
-        return;
-      }
-
-      if (isOccupied) {
-        box.className = "p-6 rounded-lg border text-center transition-all bg-red-900 border-red-500";
-        text.innerText = "TERISI";
-      } else {
-        box.className = "p-6 rounded-lg border text-center transition-all bg-green-900 border-green-500";
-        text.innerText = "KOSONG";
-      }
-    }
-
-    // -------------------------------------------------------------
-    // FUNGSI KONEKSI KAMERA AI (CONNECT / DISCONNECT TOGGLE)
-    // -------------------------------------------------------------
-    function toggleCameraConnection() {
-      if (!isCameraConnected) {
-        startCamera();
-      } else {
-        stopCamera();
-      }
-    }
-
-    async function startCamera() {
-      const btn = document.getElementById("btn-toggle-camera");
-      btn.innerText = "Loading Model...";
-      btn.disabled = true;
-
-      try {
-        const modelURL = URL_MODEL + "model.json";
-        const metadataURL = URL_MODEL + "metadata.json";
-
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
-
-        webcam = new tmImage.Webcam(250, 250, true);
-        await webcam.setup();
-        await webcam.play();
-
-        const webcamContainer = document.getElementById("webcam-container");
-        webcamContainer.innerHTML = ""; 
-        webcamContainer.appendChild(webcam.canvas);
-
-        labelContainer = document.getElementById("label-container");
-        labelContainer.innerHTML = "";
-        for (let i = 0; i < maxPredictions; i++) {
-          labelContainer.appendChild(document.createElement("div"));
-        }
-
-        isCameraConnected = true;
-        updateCameraUI(true);
-        addLog("Kamera", "Kamera AI aktif dan mendeteksi.");
-        
-        loop();
-      } catch (err) {
-        addLog("Kamera Error", "Gagal membuka kamera / model");
-        updateCameraUI(false);
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    function stopCamera() {
-      if (webcam) {
-        webcam.stop();
-      }
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-
-      isCameraConnected = false;
-      
-      const webcamContainer = document.getElementById("webcam-container");
-      webcamContainer.innerHTML = `<span class="text-xs text-gray-500">Kamera Belum Aktif</span>`;
-      document.getElementById("label-container").innerHTML = "";
-
-      updateCameraUI(false);
-      addLog("Kamera", "Kamera AI dimatikan.");
-    }
-
-    async function loop() {
-      if (!isCameraConnected) return;
-      webcam.update();
-      await predict();
-      animationFrameId = window.requestAnimationFrame(loop);
-    }
-
-    async function predict() {
-      const prediction = await model.predict(webcam.canvas);
-      for (let i = 0; i < maxPredictions; i++) {
-        const classPrediction = `${prediction[i].className}: ${(prediction[i].probability * 100).toFixed(0)}%`;
-        labelContainer.childNodes[i].innerHTML = classPrediction;
-      }
-    }
-
-    function updateCameraUI(connected) {
-      const dot = document.getElementById('camera-dot');
-      const text = document.getElementById('camera-status-text');
-      const btn = document.getElementById('btn-toggle-camera');
-
-      if (connected) {
-        dot.className = "w-3 h-3 rounded-full bg-green-500 animate-pulse";
-        text.className = "text-xs font-bold text-green-400";
-        text.innerText = "Online";
-        btn.innerText = "Stop / Disconnect Camera";
-        btn.className = "bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md font-medium text-sm transition";
-      } else {
-        dot.className = "w-3 h-3 rounded-full bg-red-500";
-        text.className = "text-xs font-bold text-red-400";
-        text.innerText = "Offline";
-        btn.innerText = "Start / Connect Camera";
-        btn.className = "bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-medium text-sm transition";
-      }
-    }
-
-    // -------------------------------------------------------------
-    // FUNGSI KONTROL GERBANG MANUAL
-    // -------------------------------------------------------------
-    function toggleGate(gateName) {
-      if (!isFirebaseConnected) {
-        alert("Harap sambungkan Firebase terlebih dahulu!");
-        return;
-      }
-
-      firebase.database().ref(`parking/${gateName}`).once('value', snapshot => {
-        const currentData = snapshot.val();
-        const currentStatus = currentData ? currentData.status : "tertutup";
-        const nextStatus = currentStatus === "tertutup" ? "terbuka" : "tertutup";
-        
-        firebase.database().ref(`parking/${gateName}`).update({
-          status: nextStatus,
-          updated: Date.now()
-        });
-        
-        addLog("Website", `Status ${gateName} diubah menjadi ${nextStatus}`);
-      });
-    }
-
-    // -------------------------------------------------------------
-    // LOG SYSTEM
-    // -------------------------------------------------------------
-    function addLog(source, eventText) {
-      const logList = document.getElementById('log-list');
-      const item = document.createElement('li');
-      item.className = "border-b border-gray-700 pb-1";
-      item.innerText = `[${new Date().toLocaleTimeString()}] (${source}) ${eventText}`;
-      logList.prepend(item);
-    }
-
-    // Otomatis hubungkan ke Firebase saat halaman pertama di-load
-    window.onload = () => {
-      connectFirebase();
-    };
-  </script>
-</body>
-</html>
+      <div class="glass-card p-5 rounded-2xl flex items-center justify-between">
+        <div>
+          <p class="
